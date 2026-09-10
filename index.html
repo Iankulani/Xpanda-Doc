@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Panda — Documentation </title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ---------- BLUE THEME + subtle accents ---------- */
+    :root {
+      --bg: #04081a;
+      --bg-2: #060e24;
+      --panel: #0a1530;
+      --panel-2: #0e1c40;
+      --border: #1a3060;
+      --border-soft: #132650;
+
+      --blue: #2563eb;
+      --blue-bright: #60a5fa;
+      --blue-light: #93c5fd;
+      --blue-deep: #1e3a8a;
+      --blue-glow: rgba(37, 99, 235, 0.45);
+      --cyan: #22d3ee;
+
+      --text: #e8f0ff;
+      --text-dim: #9cb4e0;
+      --text-faint: #5c76ab;
+
+      --radius: 12px;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --display: 'Space Grotesk', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--display);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    /* WebGL background canvas */
+    #webgl-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* Fallback gradient when WebGL not available */
+    #fallback-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 90% 70% at 50% 0%, rgba(37,99,235,0.25), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 10% 90%, rgba(34,211,238,0.10), transparent 60%),
+        linear-gradient(180deg, #04081a 0%, #060e24 100%);
+    }
+    .webgl-active #fallback-bg { display: none; }
+    .webgl-fallback #webgl-bg { display: none; }
+
+    /* Animated grid overlay (subtle) */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(96,165,250,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,165,250,0.05) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 20%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 20%, transparent 80%);
+      animation: gridDrift 50s linear infinite;
+    }
+    @keyframes gridDrift {
+      0%   { background-position: 0 0, 0 0; }
+      100% { background-position: 64px 64px, 64px 64px; }
+    }
+
+    /* Content above background */
+    .shell, .menu-btn, main, footer { position: relative; z-index: 2; }
+
+    a { color: var(--blue-bright); text-decoration: none; transition: color 0.2s; }
+    a:hover { text-decoration: underline; color: var(--cyan); }
+    code, pre { font-family: var(--mono); }
+    ::selection { background: var(--blue); color: #fff; }
+
+    /* ---------- layout shell ---------- */
+    .shell { display: grid; grid-template-columns: 272px 1fr; min-height: 100vh; }
+
+    /* ---------- SIDEBAR ---------- */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border-soft);
+      background: rgba(5, 12, 32, 0.85);
+      backdrop-filter: blur(16px) saturate(1.3);
+      -webkit-backdrop-filter: blur(16px) saturate(1.3);
+      padding: 24px 16px 40px;
+      transition: transform 0.25s ease;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 4px 22px;
+      border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 20px;
+    }
+
+    .logo-slot {
+      width: 44px; height: 44px;
+      border-radius: 11px;
+      border: 2px solid var(--blue-bright);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--blue-light);
+      font-size: 20px;
+      flex-shrink: 0;
+      background: linear-gradient(145deg, rgba(37,99,235,0.25), rgba(34,211,238,0.08));
+      box-shadow: 0 0 18px var(--blue-glow), inset 0 0 12px rgba(96,165,250,0.2);
+      animation: logoPulse 3.5s ease-in-out infinite alternate;
+    }
+    @keyframes logoPulse {
+      0%   { box-shadow: 0 0 12px var(--blue-glow); border-color: var(--blue-bright); }
+      100% { box-shadow: 0 0 26px var(--blue-glow), 0 0 14px var(--cyan); border-color: var(--cyan); }
+    }
+
+    .brand-name {
+      font-weight: 700; font-size: 17px; letter-spacing: 0.2px;
+      background: linear-gradient(120deg, var(--blue-light), var(--cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .brand-name span { background: none; color: var(--cyan); -webkit-background-clip: unset; }
+    .brand-sub { font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); margin-top: 2px; }
+
+    .nav-group { margin-bottom: 22px; }
+
+    .nav-label {
+      font-family: var(--mono); font-size: 10.5px;
+      color: var(--cyan); padding: 0 10px 6px;
+      letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85;
+    }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 8px;
+      color: var(--text-dim); font-size: 13.5px; cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.18s ease;
+    }
+    .nav-link:hover {
+      color: var(--text); background: rgba(37,99,235,0.12);
+      border-left-color: var(--cyan); text-decoration: none;
+      transform: translateX(2px);
+    }
+    .nav-link.active {
+      color: var(--blue-bright); background: rgba(37,99,235,0.18);
+      border-left: 3px solid var(--cyan);
+      box-shadow: inset 0 0 16px rgba(34,211,238,0.1);
+    }
+    .nav-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--text-faint); flex-shrink: 0; transition: 0.2s;
+    }
+    .nav-link.active .nav-dot {
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .sidebar-foot {
+      margin-top: 30px; padding-top: 18px;
+      border-top: 1px solid var(--border-soft);
+      display: flex; gap: 10px;
+    }
+    .sidebar-foot a {
+      color: var(--text-faint);
+      display: flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 9px;
+      border: 1px solid var(--border-soft);
+      transition: all 0.18s ease;
+    }
+    .sidebar-foot a:hover {
+      color: var(--cyan); border-color: var(--cyan);
+      background: rgba(34,211,238,0.08); transform: translateY(-2px);
+      text-decoration: none;
+      box-shadow: 0 0 12px rgba(34,211,238,0.2);
+    }
+    .sidebar-foot svg { width: 16px; height: 16px; }
+
+    .menu-btn {
+      display: none; position: fixed; top: 16px; left: 16px; z-index: 100;
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--panel); border: 1px solid var(--border);
+      color: var(--text); align-items: center; justify-content: center;
+      cursor: pointer; backdrop-filter: blur(8px); transition: 0.2s;
+    }
+    .menu-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ---------- MAIN ---------- */
+    main { min-width: 0; }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      padding: 100px 60px 90px;
+      border-bottom: 1px solid var(--border-soft);
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(4,8,26,0.2), rgba(4,8,26,0.85));
+    }
+    .hero-inner { position: relative; max-width: 760px; z-index: 2; }
+
+    .hero-eyebrow {
+      font-family: var(--mono); font-size: 12.5px;
+      color: var(--cyan);
+      display: flex; align-items: center; gap: 9px;
+      margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .pulse-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 0 0 rgba(34,211,238,0.6);
+      animation: pulseCyan 2s infinite;
+    }
+    @keyframes pulseCyan {
+      0%   { box-shadow: 0 0 0 0 rgba(34,211,238,0.6); }
+      70%  { box-shadow: 0 0 0 12px rgba(34,211,238,0); }
+      100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+    }
+
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 60px);
+      line-height: 1.04; margin: 0 0 22px;
+      font-weight: 700; letter-spacing: -0.02em;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(100deg, var(--blue-light), var(--cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: hueShift 8s ease-in-out infinite alternate;
+    }
+    @keyframes hueShift {
+      0%   { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(20deg); }
+    }
+    .hero p.lead {
+      font-size: 16.5px; color: var(--text-dim);
+      max-width: 60ch; margin: 0 0 34px;
+    }
+
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 42px; }
+
+    .btn {
+      font-family: var(--display); font-weight: 600; font-size: 14px;
+      padding: 12px 26px; border-radius: 10px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid transparent; transition: all 0.22s ease;
+      position: relative; overflow: hidden;
+    }
+    .btn:hover { text-decoration: none; transform: translateY(-2px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+      color: #fff;
+      box-shadow: 0 6px 22px rgba(37,99,235,0.45);
+      border: 1px solid var(--blue-bright);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--blue-bright), var(--blue));
+      box-shadow: 0 10px 32px rgba(34,211,238,0.4), 0 0 0 1px var(--cyan);
+    }
+    .btn-ghost { background: rgba(96,165,250,0.04); border-color: var(--border); color: var(--text); }
+    .btn-ghost:hover {
+      border-color: var(--cyan); color: var(--cyan);
+      background: rgba(34,211,238,0.07);
+    }
+
+    .hero-terminal {
+      background: rgba(10, 21, 48, 0.85);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-width: 540px; overflow: hidden;
+      box-shadow: 0 16px 44px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.08);
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .hero-terminal:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 16px 48px rgba(37,99,235,0.35), 0 0 0 1px rgba(34,211,238,0.3);
+    }
+    .term-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border-soft);
+      background: rgba(14, 28, 64, 0.7);
+    }
+    .term-bar span { width: 10px; height: 10px; border-radius: 50%; background: #2a3a58; }
+    .term-bar span:nth-child(1) { background: #ff5f56; }
+    .term-bar span:nth-child(2) { background: #ffbd2e; }
+    .term-bar span:nth-child(3) { background: #27c93f; }
+    .term-bar .lbl { margin-left: 10px; font-family: var(--mono); font-size: 11px; color: var(--cyan); }
+
+    .term-body {
+      padding: 16px 18px; font-family: var(--mono);
+      font-size: 13px; background: rgba(0,0,0,0.28);
+    }
+    .term-body .prompt { color: var(--cyan); }
+    .term-line { color: var(--text-dim); white-space: pre-wrap; margin-bottom: 4px; }
+    .caret {
+      display: inline-block; width: 8px; height: 15px;
+      background: var(--cyan); margin-left: 4px; vertical-align: middle;
+      animation: blinkCyan 1s steps(1) infinite;
+    }
+    @keyframes blinkCyan { 50% { opacity: 0; } }
+
+    /* ---------- SECTIONS ---------- */
+    .section {
+      padding: 64px 60px;
+      border-bottom: 1px solid var(--border-soft);
+      max-width: 980px;
+      background: rgba(6, 14, 36, 0.4);
+      backdrop-filter: blur(3px);
+    }
+    .section h2 {
+      font-size: 28px; margin: 0 0 6px; font-weight: 700; letter-spacing: -0.01em;
+      background: linear-gradient(135deg, #fff 10%, var(--blue-light) 60%, var(--cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      display: inline-block;
+    }
+    .section .section-kicker {
+      font-family: var(--mono); font-size: 12px;
+      color: var(--cyan); margin-bottom: 12px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .section p { color: var(--text-dim); font-size: 15px; max-width: 72ch; margin-bottom: 16px; }
+
+    .card-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 18px; margin-top: 28px;
+    }
+    .info-card {
+      background: linear-gradient(160deg, var(--panel), rgba(10,21,48,0.6));
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      transition: all 0.25s ease;
+      border-left: 4px solid var(--blue);
+      position: relative; overflow: hidden;
+    }
+    .info-card::after {
+      content: ''; position: absolute; top: 0; right: 0;
+      width: 90px; height: 90px;
+      background: radial-gradient(circle, rgba(34,211,238,0.2), transparent 70%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .info-card:hover {
+      border-left-color: var(--cyan);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--blue-bright);
+      transform: translateY(-4px);
+    }
+    .info-card:hover::after { opacity: 1; }
+    .info-card .ic-num {
+      font-family: var(--mono); font-size: 11px;
+      color: var(--cyan); margin-bottom: 12px;
+      font-weight: 600; letter-spacing: 0.5px;
+    }
+    .info-card h3 { margin: 0 0 8px; font-size: 17px; color: #fff; }
+    .info-card p { margin: 0; font-size: 13.5px; color: var(--text-dim); }
+
+    /* install steps */
+    .steps { margin-top: 30px; }
+    .step {
+      display: grid; grid-template-columns: 36px 1fr;
+      gap: 20px; padding: 26px 0;
+      border-top: 1px solid var(--border-soft);
+    }
+    .step:first-child { border-top: none; }
+    .step-num {
+      font-family: var(--mono); font-size: 15px;
+      color: var(--cyan); font-weight: 600; padding-top: 2px;
+    }
+    .step h3 { margin: 0 0 8px; font-size: 17px; color: #fff; }
+    .step p { margin: 0 0 14px; font-size: 14px; color: var(--text-dim); max-width: 66ch; }
+
+    .code-block {
+      background: rgba(10, 21, 48, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .code-block:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 1px rgba(34,211,238,0.25), 0 10px 28px rgba(0,0,0,0.35);
+    }
+    .code-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 14px; background: rgba(14, 28, 64, 0.8);
+      border-bottom: 1px solid var(--border-soft);
+      font-family: var(--mono); font-size: 11px; color: var(--text-faint);
+    }
+    .copy-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-dim); font-family: var(--mono);
+      font-size: 10.5px; padding: 4px 12px; border-radius: 6px;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .copy-btn:hover {
+      border-color: var(--cyan); color: var(--cyan);
+      background: rgba(34,211,238,0.08);
+    }
+    .copy-btn.copied { color: var(--cyan); border-color: var(--cyan); }
+    pre.code {
+      margin: 0; padding: 14px 18px; font-size: 13px;
+      color: #c9dbfd; overflow-x: auto; background: rgba(0,0,0,0.22);
+    }
+    pre.code .c1 { color: var(--text-faint); }
+    pre.code .c2 { color: var(--cyan); }
+
+    /* platform tabs */
+    .platform-tabs {
+      display: flex; gap: 10px; margin: 30px 0 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .ptab {
+      font-family: var(--display); font-weight: 600; font-size: 14px;
+      padding: 12px 20px; color: var(--text-dim); cursor: pointer;
+      border-bottom: 2px solid transparent;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.2s;
+    }
+    .ptab:hover { color: var(--text); }
+    .ptab.active {
+      color: var(--cyan); border-bottom-color: var(--cyan);
+      background: linear-gradient(180deg, transparent, rgba(34,211,238,0.08));
+    }
+    .ptab svg { width: 16px; height: 16px; }
+
+    .ppanel { display: none; padding-top: 26px; }
+    .ppanel.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0.2; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    table.cmd-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.cmd-table th {
+      text-align: left; font-family: var(--mono); font-size: 11px;
+      color: var(--cyan); font-weight: 500; padding: 8px 12px;
+      border-bottom: 1px solid var(--border); letter-spacing: 0.06em;
+    }
+    table.cmd-table td {
+      padding: 12px; border-bottom: 1px solid var(--border-soft);
+      color: var(--text-dim); vertical-align: top;
+    }
+    table.cmd-table td.cmd {
+      font-family: var(--mono); color: var(--blue-bright);
+      white-space: nowrap; font-weight: 500;
+    }
+    table.cmd-table tr:last-child td { border-bottom: none; }
+    table.cmd-table tr:hover td { background: rgba(37,99,235,0.06); }
+
+    .kv-list { margin-top: 22px; }
+    .kv-row {
+      display: grid; grid-template-columns: 220px 1fr; gap: 20px;
+      padding: 14px 0; border-top: 1px solid var(--border-soft);
+      font-size: 14px;
+    }
+    .kv-row:first-child { border-top: none; }
+    .kv-key { font-family: var(--mono); color: var(--cyan); font-size: 13px; font-weight: 500; }
+    .kv-val { color: var(--text-dim); }
+
+    /* community */
+    .community { padding: 64px 60px 40px; }
+    .community h2 { font-size: 28px; margin: 0 0 8px; }
+    .community p { color: var(--text-dim); font-size: 15px; max-width: 60ch; margin: 0 0 32px; }
+
+    .social-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .social-card {
+      background: linear-gradient(160deg, var(--panel), rgba(10,21,48,0.6));
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+      transition: all 0.25s ease;
+      border-bottom: 3px solid transparent;
+      position: relative; overflow: hidden;
+    }
+    .social-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.18), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .social-card:hover {
+      border-color: var(--blue-bright); border-bottom-color: var(--cyan);
+      transform: translateY(-5px); text-decoration: none;
+      box-shadow: 0 18px 36px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,211,238,0.3);
+    }
+    .social-card:hover::before { opacity: 1; }
+    .social-card svg {
+      width: 24px; height: 24px; color: var(--text);
+      transition: color 0.2s; position: relative; z-index: 1;
+    }
+    .social-card:hover svg { color: var(--cyan); }
+    .social-card .sc-name { font-weight: 600; font-size: 15px; color: var(--text); position: relative; z-index: 1; }
+    .social-card .sc-sub { font-family: var(--mono); font-size: 11px; color: var(--text-faint); position: relative; z-index: 1; }
+
+    footer {
+      padding: 28px 60px 40px;
+      font-family: var(--mono); font-size: 11.5px;
+      color: var(--text-faint);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      border-top: 1px solid var(--border-soft);
+      background: rgba(4, 8, 26, 0.75);
+      backdrop-filter: blur(6px);
+    }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 1020px) {
+      .card-grid { grid-template-columns: 1fr 1fr; }
+      .social-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 780px) {
+      .shell { grid-template-columns: 1fr; }
+      .menu-btn { display: flex; }
+      .sidebar {
+        position: fixed; z-index: 90; left: 0; top: 0; width: 272px;
+        transform: translateX(-100%);
+        box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+        background: #050c20;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .hero, .section, .community, footer { padding-left: 24px; padding-right: 24px; }
+      .hero { padding-top: 96px; }
+      .card-grid { grid-template-columns: 1fr; }
+      .social-grid { grid-template-columns: repeat(2, 1fr); }
+      .kv-row { grid-template-columns: 1fr; gap: 6px; }
+      .step { grid-template-columns: 28px 1fr; gap: 14px; }
+    }
+    @media (max-width: 480px) {
+      .social-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 32px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+      .grid-overlay { animation: none; }
+    }
+  </style>
+</head>
+<body class="webgl-active">
+
+  <!-- WebGL background canvas -->
+  <canvas id="webgl-bg"></canvas>
+  <!-- Fallback background if WebGL isn't available -->
+  <div id="fallback-bg"></div>
+  <!-- Animated grid overlay -->
+  <div class="grid-overlay"></div>
+
+  <button class="menu-btn" id="menuBtn" aria-label="Toggle navigation">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <div class="shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo-slot">🐼</div>
+        <div>
+          <div class="brand-name">X<span>Panda</span></div>
+          <div class="brand-sub">v1.0 · docs</div>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Getting started</div>
+        <a class="nav-link" data-target="overview"><span class="nav-dot"></span>Overview</a>
+        <a class="nav-link" data-target="requirements"><span class="nav-dot"></span>Requirements</a>
+        <a class="nav-link" data-target="install"><span class="nav-dot"></span>Installation</a>
+        <a class="nav-link" data-target="running"><span class="nav-dot"></span>Running X Panda</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Usage</div>
+        <a class="nav-link" data-target="configuration"><span class="nav-dot"></span>Configuration</a>
+        <a class="nav-link" data-target="commands"><span class="nav-dot"></span>Bot Commands</a>
+        <a class="nav-link" data-target="updating"><span class="nav-dot"></span>Updating</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Help</div>
+        <a class="nav-link" data-target="troubleshooting"><span class="nav-dot"></span>Troubleshooting</a>
+        <a class="nav-link" data-target="community"><span class="nav-dot"></span>Community</a>
+      </div>
+
+      <div class="sidebar-foot">
+        <a href="#" title="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.14c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.8 1.18 1.82 1.18 3.08 0 4.41-2.69 5.38-5.25 5.67.42.36.78 1.07.78 2.16v3.2c0 .3.21.66.79.55A10.52 10.52 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg></a>
+        <a href="#" title="Discord"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19.7 19.7 0 0015.6 3l-.3.6a14 14 0 014.2 1.6 15.9 15.9 0 00-13 0A14 14 0 016.7 3.6L6.4 3A19.6 19.6 0 001.7 4.4C-.6 8-1.2 11.4.9 14.8a19.9 19.9 0 005.6 2.7l.8-1.2a13 13 0 01-2-1c.2-.1.3-.2.5-.3a14.2 14.2 0 0012.4 0l.5.3a13 13 0 01-2 1l.8 1.2a19.8 19.8 0 005.6-2.7c2.4-3.9 1.3-7.3-.8-10.4zM8.5 12.9c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7zm7 0c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7z"/></svg></a>
+        <a href="#" title="Telegram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.6L2.7 12.1c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 1.9 5.8c.2.6.4.8.9.8.5 0 .7-.2 1-.5l2.4-2.3 5 3.6c.9.5 1.5.2 1.8-.9l3.2-15c.4-1.3-.4-1.9-1.7-1.4zM7.9 14.7l9-5.7c.4-.3.8-.1.5.2l-7.5 6.8-.3 2.8-1.5-4.1z"/></svg></a>
+        <a href="#" title="WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5A9.9 9.9 0 0012 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm5.6 14.1c-.2.6-1.4 1.2-1.9 1.3-.5.1-1.1.1-1.8-.1a13.2 13.2 0 01-4.4-2.6 15.4 15.4 0 01-2.8-3.7c-.3-.5-.6-1.1-.6-1.7 0-.7.4-1.4.8-1.7.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.2.4.9 1.4 1.9 2.2 1.1 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.7-.8c.2-.3.4-.2.7-.1l1.9.9c.2.1.4.2.5.3.1.2.1.9-.1 1.7z"/></svg></a>
+        <a href="#" title="Pinterest"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 4.2 2.6 7.8 6.3 9.3-.1-.8-.2-2 0-2.9l1.4-6s-.4-.7-.4-1.8c0-1.7 1-2.9 2.2-2.9 1 0 1.5.8 1.5 1.7 0 1-.7 2.6-1 4-.3 1.2.6 2.1 1.8 2.1 2.1 0 3.7-2.2 3.7-5.5 0-2.9-2.1-4.9-5-4.9-3.4 0-5.5 2.6-5.5 5.2 0 1 .4 2.1.9 2.7.1.1.1.2.1.4l-.4 1.4c0 .2-.2.3-.4.2-1.4-.7-2.3-2.7-2.3-4.4 0-3.6 2.6-6.9 7.5-6.9 3.9 0 7 2.8 7 6.5 0 3.9-2.4 7-5.9 7-1.1 0-2.2-.6-2.6-1.3l-.7 2.7c-.3 1-1 2.3-1.4 3.1.9.3 1.9.4 3 .4 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg></a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+
+      <!-- HERO -->
+      <section class="hero" id="overview">
+        <div class="hero-inner">
+          <div class="hero-eyebrow"><span class="pulse-dot"></span>Documentation · X Panda</div>
+          <h1>Install and run <em>X Panda</em><br>from source in minutes.</h1>
+          <p class="lead">X Panda is a Python-based automation tool distributed straight from its Git repository. This guide walks through cloning the source, setting up your environment, and connecting it to Discord, Telegram, and WhatsApp.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" onclick="jumpTo('install')">Start installing</a>
+            <a class="btn btn-ghost" onclick="jumpTo('commands')">Browse commands</a>
+          </div>
+          <div class="hero-terminal">
+            <div class="term-bar"><span></span><span></span><span></span><span class="lbl">bash</span></div>
+            <div class="term-body">
+              <div class="term-line"><span class="prompt">$</span> git clone https://github.com/your-org/x-panda.git</div>
+              <div class="term-line"><span class="prompt">$</span> cd x-panda && python3 -m venv venv</div>
+              <div class="term-line"><span class="prompt">$</span> python3 xpanda.py<span class="caret"></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REQUIREMENTS -->
+      <section class="section" id="requirements">
+        <div class="section-kicker">Before you begin</div>
+        <h2>Requirements</h2>
+        <p>X Panda runs anywhere Python and Git are available — Windows, macOS, or Linux.</p>
+        <div class="card-grid">
+          <div class="info-card">
+            <div class="ic-num">01</div>
+            <h3>Python 3.10+</h3>
+            <p>Check with <code>python3 --version</code>. Install from python.org if it's missing.</p>
+          </div>
+          <div class="info-card">
+            <div class="ic-num">02</div>
+            <h3>Git</h3>
+            <p>Needed to clone and later update the repository. Check with <code>git --version</code>.</p>
+          </div>
+          <div class="info-card">
+            <div class="ic-num">03</div>
+            <h3>pip</h3>
+            <p>Comes bundled with Python and installs everything listed in <code>requirements.txt</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSTALL -->
+      <section class="section" id="install">
+        <div class="section-kicker">Step by step</div>
+        <h2>Installing X Panda via Git</h2>
+        <p>Five steps take you from a clean machine to a running bot. Run each command from a terminal, in order.</p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>
+              <h3>Clone the repository</h3>
+              <p>Download the source code to your machine.</p>
+              <div class="code-block">
+                <div class="code-head"><span>terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+                <pre class="code"><span class="c1"># clone over HTTPS</span>
+git https://github.com/Iankulani/xpanda_v2.git
+<span class="c1"># move into the project folder</span>
+cd x-panda</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>
+              <h3>Create a virtual environment</h3>
+              <p>Keeps X Panda's dependencies isolated from the rest of your system.</p>
+              <div class="code-block">
+                <div class="code-head"><span>terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+                <pre class="code">python3 -m venv venv
+<span class="c1"># activate it</span>
+source venv/bin/activate      <span class="c2">→ macOS / Linux</span>
+venv\Scripts\activate         <span class="c2">→ Windows</span></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>
+              <h3>Install dependencies</h3>
+              <p>Pulls in every Python package X Panda needs to run.</p>
+              <div class="code-block">
+                <div class="code-head"><span>terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+                <pre class="code">pip install -r requirements.txt</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">4</div>
+            <div>
+              <h3>Add your configuration</h3>
+              <p>Copy the example environment file and fill in your bot tokens.</p>
+              <div class="code-block">
+                <div class="code-head"><span>terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+                <pre class="code">cp .env.example .env
+<span class="c1"># then open .env and add your tokens</span></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-num">5</div>
+            <div>
+              <h3>Run X Panda</h3>
+              <p>Starts the tool. Leave this terminal window open while it's running.</p>
+              <div class="code-block">
+                <div class="code-head"><span>terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+                <pre class="code">python3 xpanda_v2.py</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RUNNING -->
+      <section class="section" id="running">
+        <div class="section-kicker">Verify it works</div>
+        <h2>Confirming X Panda is running</h2>
+        <p>A healthy start prints a status line similar to the one below, and each connected platform will answer its help command.</p>
+        <div class="code-block" style="margin-top:22px;">
+          <div class="code-head"><span>xpanda.py output</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <pre class="code"><span class="c2">[XPanda]</span> loaded configuration from .env
+<span class="c2">[XPanda]</span> Discord connection: online
+<span class="c2">[XPanda]</span> Telegram connection: online
+<span class="c2">[XPanda]</span> WhatsApp connection: online
+<span class="c2">[XPanda]</span> ready — send !help, /help, or / to begin</pre>
+        </div>
+      </section>
+
+      <!-- CONFIGURATION -->
+      <section class="section" id="configuration">
+        <div class="section-kicker">Settings</div>
+        <h2>Configuration reference</h2>
+        <p>All settings live in the <code>.env</code> file created during installation. Restart X Panda after changing any value.</p>
+        <div class="kv-list">
+          <div class="kv-row"><div class="kv-key">DISCORD_TOKEN</div><div class="kv-val">Bot token from the Discord Developer Portal.</div></div>
+          <div class="kv-row"><div class="kv-key">TELEGRAM_TOKEN</div><div class="kv-val">Bot token issued by @BotFather on Telegram.</div></div>
+          <div class="kv-row"><div class="kv-key">WHATSAPP_SESSION</div><div class="kv-val">Session identifier generated on first WhatsApp login.</div></div>
+          <div class="kv-row"><div class="kv-key">LOG_LEVEL</div><div class="kv-val">Controls console verbosity: info, debug, or error.</div></div>
+          <div class="kv-row"><div class="kv-key">PREFIX</div><div class="kv-val">Command prefix override for Discord, defaults to <code>!</code>.</div></div>
+        </div>
+      </section>
+
+      <!-- COMMANDS -->
+      <section class="section" id="commands">
+        <div class="section-kicker">Reference</div>
+        <h2>Bot commands by platform</h2>
+        <p>X Panda listens on three platforms at once. Each one uses its own command style — pick the tab for the platform you're using.</p>
+
+        <div class="platform-tabs">
+          <div class="ptab active" data-panel="p-discord">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19.7 19.7 0 0015.6 3l-.3.6a14 14 0 014.2 1.6 15.9 15.9 0 00-13 0A14 14 0 016.7 3.6L6.4 3A19.6 19.6 0 001.7 4.4C-.6 8-1.2 11.4.9 14.8a19.9 19.9 0 005.6 2.7l.8-1.2a13 13 0 01-2-1c.2-.1.3-.2.5-.3a14.2 14.2 0 0012.4 0l.5.3a13 13 0 01-2 1l.8 1.2a19.8 19.8 0 005.6-2.7c2.4-3.9 1.3-7.3-.8-10.4zM8.5 12.9c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7zm7 0c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7z"/></svg>
+            Discord
+          </div>
+          <div class="ptab" data-panel="p-telegram">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.6L2.7 12.1c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 1.9 5.8c.2.6.4.8.9.8.5 0 .7-.2 1-.5l2.4-2.3 5 3.6c.9.5 1.5.2 1.8-.9l3.2-15c.4-1.3-.4-1.9-1.7-1.4zM7.9 14.7l9-5.7c.4-.3.8-.1.5.2l-7.5 6.8-.3 2.8-1.5-4.1z"/></svg>
+            Telegram
+          </div>
+          <div class="ptab" data-panel="p-whatsapp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5A9.9 9.9 0 0012 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm5.6 14.1c-.2.6-1.4 1.2-1.9 1.3-.5.1-1.1.1-1.8-.1a13.2 13.2 0 01-4.4-2.6 15.4 15.4 0 01-2.8-3.7c-.3-.5-.6-1.1-.6-1.7 0-.7.4-1.4.8-1.7.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.2.4.9 1.4 1.9 2.2 1.1 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.7-.8c.2-.3.4-.2.7-.1l1.9.9c.2.1.4.2.5.3.1.2.1.9-.1 1.7z"/></svg>
+            WhatsApp
+          </div>
+        </div>
+
+        <div class="ppanel active" id="p-discord">
+          <table class="cmd-table">
+            <tr><th>Command</th><th>Description</th></tr>
+            <tr><td class="cmd">!help</td><td>Lists every available command and a short description of each.</td></tr>
+            <tr><td class="cmd">!status</td><td>Shows whether X Panda is online and how long it's been running.</td></tr>
+            <tr><td class="cmd">!config</td><td>Displays the current server-level settings for this channel.</td></tr>
+            <tr><td class="cmd">!run &lt;task&gt;</td><td>Starts a configured task by name.</td></tr>
+            <tr><td class="cmd">!stop &lt;task&gt;</td><td>Stops a task that's currently running.</td></tr>
+          </table>
+        </div>
+
+        <div class="ppanel" id="p-telegram">
+          <table class="cmd-table">
+            <tr><th>Command</th><th>Description</th></tr>
+            <tr><td class="cmd">/help</td><td>Lists every available command and a short description of each.</td></tr>
+            <tr><td class="cmd">/status</td><td>Shows whether X Panda is online and how long it's been running.</td></tr>
+            <tr><td class="cmd">/settings</td><td>Opens the current chat's configuration.</td></tr>
+            <tr><td class="cmd">/run &lt;task&gt;</td><td>Starts a configured task by name.</td></tr>
+            <tr><td class="cmd">/stop &lt;task&gt;</td><td>Stops a task that's currently running.</td></tr>
+          </table>
+        </div>
+
+        <div class="ppanel" id="p-whatsapp">
+          <table class="cmd-table">
+            <tr><th>Command</th><th>Description</th></tr>
+            <tr><td class="cmd">/</td><td>Opens the main menu with every available command.</td></tr>
+            <tr><td class="cmd">/status</td><td>Shows whether X Panda is online and how long it's been running.</td></tr>
+            <tr><td class="cmd">/run &lt;task&gt;</td><td>Starts a configured task by name.</td></tr>
+            <tr><td class="cmd">/stop &lt;task&gt;</td><td>Stops a task that's currently running.</td></tr>
+            <tr><td class="cmd">/link</td><td>Re-links this chat if the session drops.</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- UPDATING -->
+      <section class="section" id="updating">
+        <div class="section-kicker">Maintenance</div>
+        <h2>Updating X Panda</h2>
+        <p>Because X Panda runs from a Git clone, updating is a pull rather than a reinstall.</p>
+        <div class="code-block" style="margin-top:22px;">
+          <div class="code-head"><span>terminal</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+          <pre class="code">cd x-panda
+git pull origin main
+pip install -r requirements.txt --upgrade
+python3 xpanda.py</pre>
+        </div>
+      </section>
+
+      <!-- TROUBLESHOOTING -->
+      <section class="section" id="troubleshooting">
+        <div class="section-kicker">Common issues</div>
+        <h2>Troubleshooting</h2>
+        <div class="kv-list">
+          <div class="kv-row"><div class="kv-key">"git: command not found"</div><div class="kv-val">Git isn't installed yet. Install it from git-scm.com, then reopen your terminal.</div></div>
+          <div class="kv-row"><div class="kv-key">Bot shows offline</div><div class="kv-val">Double-check the matching token in <code>.env</code> and confirm the bot is invited to the server or chat.</div></div>
+          <div class="kv-row"><div class="kv-key">ModuleNotFoundError</div><div class="kv-val">The virtual environment isn't activated, or a package failed to install — rerun <code>pip install -r requirements.txt</code>.</div></div>
+          <div class="kv-row"><div class="kv-key">Commands don't respond</div><div class="kv-val">Confirm the prefix matches your platform: <code>!</code> on Discord, <code>/</code> on Telegram and WhatsApp.</div></div>
+        </div>
+      </section>
+
+      <!-- COMMUNITY -->
+      <section class="community" id="community">
+        <div class="section-kicker">Stay connected</div>
+        <h2>Community &amp; support</h2>
+        <p>Get help, follow updates, or report an issue on any of these channels.</p>
+        <div class="social-grid">
+          <a class="social-card" href="#">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.14c-3.2.7-3.87-1.36-3.87-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.8 1.18 1.82 1.18 3.08 0 4.41-2.69 5.38-5.25 5.67.42.36.78 1.07.78 2.16v3.2c0 .3.21.66.79.55A10.52 10.52 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+            <div class="sc-name">GitHub</div>
+            <div class="sc-sub">source &amp; issues</div>
+          </a>
+          <a class="social-card" href="#">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.3 4.4A19.7 19.7 0 0015.6 3l-.3.6a14 14 0 014.2 1.6 15.9 15.9 0 00-13 0A14 14 0 016.7 3.6L6.4 3A19.6 19.6 0 001.7 4.4C-.6 8-1.2 11.4.9 14.8a19.9 19.9 0 005.6 2.7l.8-1.2a13 13 0 01-2-1c.2-.1.3-.2.5-.3a14.2 14.2 0 0012.4 0l.5.3a13 13 0 01-2 1l.8 1.2a19.8 19.8 0 005.6-2.7c2.4-3.9 1.3-7.3-.8-10.4zM8.5 12.9c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7zm7 0c-.8 0-1.5-.8-1.5-1.7s.7-1.7 1.5-1.7 1.5.8 1.5 1.7-.7 1.7-1.5 1.7z"/></svg>
+            <div class="sc-name">Discord</div>
+            <div class="sc-sub">live support</div>
+          </a>
+          <a class="social-card" href="#">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.6L2.7 12.1c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 1.9 5.8c.2.6.4.8.9.8.5 0 .7-.2 1-.5l2.4-2.3 5 3.6c.9.5 1.5.2 1.8-.9l3.2-15c.4-1.3-.4-1.9-1.7-1.4zM7.9 14.7l9-5.7c.4-.3.8-.1.5.2l-7.5 6.8-.3 2.8-1.5-4.1z"/></svg>
+            <div class="sc-name">Telegram</div>
+            <div class="sc-sub">announcements</div>
+          </a>
+          <a class="social-card" href="#">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.7 1.5 5.3L2 22l4.8-1.5A9.9 9.9 0 0012 22c5.5 0 10-4.5 10-10S17.5 2 12 2zm5.6 14.1c-.2.6-1.4 1.2-1.9 1.3-.5.1-1.1.1-1.8-.1a13.2 13.2 0 01-4.4-2.6 15.4 15.4 0 01-2.8-3.7c-.3-.5-.6-1.1-.6-1.7 0-.7.4-1.4.8-1.7.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.5c-.1.2-.3.3-.1.6.2.4.9 1.4 1.9 2.2 1.1 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.7-.8c.2-.3.4-.2.7-.1l1.9.9c.2.1.4.2.5.3.1.2.1.9-.1 1.7z"/></svg>
+            <div class="sc-name">WhatsApp</div>
+            <div class="sc-sub">direct chat</div>
+          </a>
+          <a class="social-card" href="https://www.pinterest.com/accuratecyberdefense/">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12c0 4.2 2.6 7.8 6.3 9.3-.1-.8-.2-2 0-2.9l1.4-6s-.4-.7-.4-1.8c0-1.7 1-2.9 2.2-2.9 1 0 1.5.8 1.5 1.7 0 1-.7 2.6-1 4-.3 1.2.6 2.1 1.8 2.1 2.1 0 3.7-2.2 3.7-5.5 0-2.9-2.1-4.9-5-4.9-3.4 0-5.5 2.6-5.5 5.2 0 1 .4 2.1.9 2.7.1.1.1.2.1.4l-.4 1.4c0 .2-.2.3-.4.2-1.4-.7-2.3-2.7-2.3-4.4 0-3.6 2.6-6.9 7.5-6.9 3.9 0 7 2.8 7 6.5 0 3.9-2.4 7-5.9 7-1.1 0-2.2-.6-2.6-1.3l-.7 2.7c-.3 1-1 2.3-1.4 3.1.9.3 1.9.4 3 .4 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
+            <div class="sc-name">Pinterest</div>
+            <div class="sc-sub">visual guides</div>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        <div>X Panda Documentation</div>
+        <div>Accurate Cyber Defense</div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    /* ============================================================
+       1. UI : mobile nav, scrollspy, copy buttons, tabs
+    ============================================================ */
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.getElementById('menuBtn');
+    menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    const navLinks = Array.from(document.querySelectorAll('.nav-link'));
+    const sections = navLinks.map(l => document.getElementById(l.dataset.target)).filter(Boolean);
+
+    function jumpTo(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.jumpTo = jumpTo;
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        jumpTo(link.dataset.target);
+        sidebar.classList.remove('open');
+      });
+    });
+
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          navLinks.forEach(l => l.classList.toggle('active', l.dataset.target === id));
+        }
+      });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+    sections.forEach(s => spy.observe(s));
+
+    function copyCode(btn) {
+      const pre = btn.closest('.code-block').querySelector('pre.code');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'copied';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+      }).catch(() => {
+        const range = document.createRange();
+        range.selectNode(pre);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        btn.textContent = 'copied';
+        setTimeout(() => { btn.textContent = 'copy'; }, 1200);
+      });
+    }
+    window.copyCode = copyCode;
+
+    const tabs = document.querySelectorAll('.ptab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.ppanel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.panel).classList.add('active');
+      });
+    });
+
+    /* ============================================================
+       2. WEBGL BLUE THEME BACKGROUND
+          Fragment shader with flowing blue plasma + particles.
+    ============================================================ */
+    (function initWebGL() {
+      const canvas = document.getElementById('webgl-bg');
+      if (!canvas) return;
+
+      const gl = canvas.getContext('webgl', { antialias: true, alpha: false })
+              || canvas.getContext('experimental-webgl');
+
+      if (!gl) {
+        document.body.classList.remove('webgl-active');
+        document.body.classList.add('webgl-fallback');
+        return;
+      }
+
+      /* ---- VERTEX SHADER ---- */
+      const vertSrc = `
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+        void main() {
+          v_uv = a_position * 0.5 + 0.5;
+          gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+      `;
+
+      /* ---- FRAGMENT SHADER: BLUE FLOWING PLASMA + GLOWING PARTICLES ---- */
+      const fragSrc = `
+        precision highp float;
+
+        varying vec2 v_uv;
+        uniform float u_time;
+        uniform vec2  u_resolution;
+        uniform vec2  u_mouse;
+
+        /* ---------- Hash & Noise ---------- */
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                     mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+        }
+        float fbm(vec2 p) {
+          float v = 0.0;
+          float a = 0.5;
+          mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+          for (int i = 0; i < 5; i++) {
+            v += a * noise(p);
+            p = rot * p * 2.0 + 100.0;
+            a *= 0.5;
+          }
+          return v;
+        }
+
+        void main() {
+          vec2 uv = v_uv;
+          vec2 aspect = vec2(u_resolution.x / u_resolution.y, 1.0);
+          vec2 p = (uv - 0.5) * aspect;
+
+          /* subtle mouse influence */
+          vec2 m = (u_mouse - 0.5) * aspect;
+          p += m * 0.18;
+
+          float t = u_time * 0.09;
+
+          /* ---------- Flowing plasma field ---------- */
+          vec2 q = vec2(
+            fbm(p * 1.5 + vec2(0.0,  t)),
+            fbm(p * 1.5 + vec2(5.2, -t))
+          );
+          vec2 r = vec2(
+            fbm(p * 2.1 + q * 1.4 + vec2(1.7, 9.2) + t * 1.4),
+            fbm(p * 2.1 + q * 1.4 + vec2(8.3, 2.8) - t * 1.1)
+          );
+          float f = fbm(p * 1.7 + r * 1.7 + t);
+
+          /* ---------- BLUE PALETTE ---------- */
+          vec3 deep    = vec3(0.008, 0.024, 0.075);   // near-black navy
+          vec3 navy    = vec3(0.024, 0.078, 0.235);   // deep blue
+          vec3 royal   = vec3(0.145, 0.388, 0.921);   // blue
+          vec3 sky     = vec3(0.376, 0.647, 1.000);   // bright blue
+          vec3 electric= vec3(0.133, 0.827, 0.933);   // cyan glow
+
+          vec3 col = deep;
+          col = mix(col, navy,  smoothstep(0.10, 0.85, f));
+          col = mix(col, royal, smoothstep(0.35, 0.95, length(q)) * 0.85);
+          col = mix(col, sky,   smoothstep(0.55, 1.00, length(r)) * 0.55);
+
+          /* ---------- Glowing cyan veins ---------- */
+          float veins = fbm(p * 3.1 + vec2(r.y * 1.8, -t * 1.8) + 11.0);
+          veins = smoothstep(0.58, 0.96, veins);
+          col = mix(col, electric, veins * 0.55);
+
+          /* ---------- Glowing particles / stars ---------- */
+          vec2 grid = uv * vec2(u_resolution.x / 90.0, u_resolution.y / 90.0);
+          vec2 gid = floor(grid);
+          vec2 gv = fract(grid) - 0.5;
+          float rnd = hash(gid);
+          float star = smoothstep(0.48, 0.02, length(gv));
+          star *= step(0.93, rnd);
+          float twinkle = 0.55 + 0.45 * sin(u_time * 2.2 + rnd * 40.0);
+          vec3 starCol = mix(sky, electric, step(0.5, rnd));
+          col += star * twinkle * starCol * 0.9;
+
+          /* ---------- Soft central light ---------- */
+          float d = length(p);
+          col += royal * exp(-d * 2.4) * 0.25;
+
+          /* ---------- Vignette ---------- */
+          float vig = smoothstep(1.35, 0.25, length(p * vec2(1.0, 1.15)));
+          col *= vig;
+
+          /* ---------- Subtle grain ---------- */
+          col += (hash(uv * u_resolution + u_time) - 0.5) * 0.02;
+
+          /* ---------- Gamma ---------- */
+          col = pow(col, vec3(0.95));
+
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `;
+
+      function compile(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.warn('Shader compile error:', gl.getShaderInfoLog(s));
+          return null;
+        }
+        return s;
+      }
+
+      const vert = compile(gl.VERTEX_SHADER, vertSrc);
+      const frag = compile(gl.FRAGMENT_SHADER, fragSrc);
+      if (!vert || !frag) {
+        document.body.classList.remove('webgl-active');
+        document.body.classList.add('webgl-fallback');
+        return;
+      }
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vert);
+      gl.attachShader(prog, frag);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        document.body.classList.remove('webgl-active');
+        document.body.classList.add('webgl-fallback');
+        return;
+      }
+
+      /* Full-screen quad */
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,  1, -1, -1, 1,
+        -1,  1,  1, -1,  1, 1
+      ]), gl.STATIC_DRAW);
+
+      const posLoc   = gl.getAttribLocation(prog, 'a_position');
+      const timeLoc  = gl.getUniformLocation(prog, 'u_time');
+      const resLoc   = gl.getUniformLocation(prog, 'u_resolution');
+      const mouseLoc = gl.getUniformLocation(prog, 'u_mouse');
+
+      gl.useProgram(prog);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+      /* Mouse tracking */
+      const mouse = { x: 0.5, y: 0.5 };
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX / window.innerWidth;
+        mouse.y = 1.0 - e.clientY / window.innerHeight;
+      });
+
+      /* Resize */
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const w = Math.floor(window.innerWidth * dpr);
+        const h = Math.floor(window.innerHeight * dpr);
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      /* Render loop */
+      const start = performance.now();
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function render(now) {
+        const t = (now - start) * 0.001;
+        gl.uniform1f(timeLoc, t);
+        gl.uniform2f(resLoc, canvas.width, canvas.height);
+        gl.uniform2f(mouseLoc, mouse.x, mouse.y);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        if (!prefersReduced) requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body>
+</html>
